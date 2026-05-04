@@ -745,7 +745,7 @@ const Dashboard = ({ patientId }) => {
 
     const baseURL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://127.0.0.1:5000'
-        : 'https://backend-dq26.onrender.com';
+        : 'https://allvibackend.onrender.com';
 
     useEffect(() => {
         setIsMounted(true);
