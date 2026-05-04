@@ -47,7 +47,7 @@ const IntakeForm = () => {
 
           const baseURL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://127.0.0.1:5000'
-            : 'https://allvi-backend.onrender.com';
+            : 'https://allvibackend.onrender.com';
             
           const n8nWebhookURL = 'https://allvi.app.n8n.cloud/webhook/b3cbf8a4-0e20-4399-8f3a-3ea24c0ecbfc/webhook';
 

@@ -23,7 +23,7 @@ const ProfileDashboard = () => {
         const fetchUserData = async () => {
             try {
                 // Ensure this matches your backend route exactly
-                const res = await axios.get(`https://allvi-backend.onrender.com/api/patients/dashboard/${patientId}`);
+                const res = await axios.get(`https://allvibackend.onrender.com/api/patients/dashboard/${patientId}`);
                 if (res.data.success) {
                     setProfile(res.data.profile);
                     setEditForm(res.data.profile);
