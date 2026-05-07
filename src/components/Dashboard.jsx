@@ -830,37 +830,43 @@ const Dashboard = ({ patientId }) => {
         document.title = originalTitle;
     };
 
-    const handleFileUpload = async (e) => {
-        const file = e.target.files[0];
+    const handleFileUpload = (event) => {
+        const file = event.target.files[0];
         if (!file) return;
 
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("patientId", patientId);
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: async (results) => {
+                // results.data will be an array of objects based on CSV headers
+                try {
+                    const response = await fetch(`${baseURL}/api/patient/import-symptoms`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            patientId: patientId, // Ensure you have this ID
+                            symptoms: results.data
+                        }),
+                    });
+                    if (!response.ok) {
+                        const errorText = await response.text(); // Read as text first
+                        console.error("Server Error:", errorText);
+                        return alert(`Upload failed: ${response.status} ${response.statusText}`);
+                    }
 
-        try {
-            const response = await axios.post(`${baseURL}/api/patient/import-symptoms`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+                    const result = await response.json();
+                    
 
-            const { message, newSymptoms } = response.data;
 
-            // Update the state locally so the chart refreshes instantly
-            if (newSymptoms && newSymptoms.length > 0) {
-                setData(prev => ({
-                    ...prev,
-                    // Combine old symptoms with new ones and sort by date
-                    symptoms: [...prev.symptoms, ...newSymptoms].sort((a, b) =>
-                        new Date(a.date) - new Date(b.date)
-                    )
-                }));
+                    if (result.success) {
+                        alert("Symptoms imported successfully!");
+                        // Trigger a re-fetch of your 'data.symptoms' here
+                    }
+                } catch (error) {
+                    console.error("Error uploading symptoms:", error);
+                }
             }
-
-            alert(message || "Data imported successfully!");
-        } catch (err) {
-            console.error("Import failed", err);
-            alert(`Upload Error: ${err.response?.data?.error || "Failed to upload file."}`);
-        }
+        });
     };
     const ChartCard = ({ title, dataKey, color, data }) => {
         const latestEntry = [...data].reverse().find(entry => entry[dataKey] !== undefined);
@@ -1021,9 +1027,23 @@ const Dashboard = ({ patientId }) => {
                     </section>
 
                     <section className="print-full-width" style={{ breakInside: 'avoid' }}>
-                        <h2 className="text-[11px] font-black text-[#1F2937]/40 uppercase tracking-widest mb-4">
-                            Symptom Correlation Trends
-                        </h2>
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-[11px] font-black text-[#1F2937]/40 uppercase tracking-widest">
+                                Symptom Correlation Trends
+                            </h2>
+
+                            {/* Hidden File Input */}
+                            <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded text-[10px] font-bold uppercase transition-colors">
+                                Upload CSV
+                                <input
+                                    type="file"
+                                    accept=".csv"
+                                    className="hidden"
+                                    onChange={handleFileUpload}
+                                />
+                            </label>
+                        </div>
+
                         <div className="bg-white p-6 rounded-xl border border-black/10 shadow-sm">
                             <div style={{ width: '100%', height: 320, minHeight: 320 }}>
                                 {isMounted && data.symptoms && data.symptoms.length > 0 ? (
@@ -1033,25 +1053,27 @@ const Dashboard = ({ patientId }) => {
                                             <XAxis
                                                 dataKey="date"
                                                 tick={{ fontSize: 9, fontWeight: 700, fill: '#94a3b8' }}
+                                                tickFormatter={(str) => new Date(str).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                             />
-                                            <YAxis tick={{ fontSize: 9, fontWeight: 700, fill: '#94a3b8' }} />
+                                            <YAxis domain={[0, 10]} tick={{ fontSize: 9, fontWeight: 700, fill: '#94a3b8' }} />
                                             <Tooltip
-                                                contentStyle={{ borderRadius: '12px', backgroundColor: '#1F2937', color: '#fff' }}
+                                                contentStyle={{ borderRadius: '12px', backgroundColor: '#1F2937', color: '#fff', border: 'none' }}
                                             />
-                                            <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }} />
+                                            <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '20px' }} />
 
-                                            {/* Dynamic Lines for Symptoms */}
-                                            <Line type="monotone" dataKey="energy" stroke="#0F4C5C" strokeWidth={2} dot={{ r: 3 }} />
-                                            <Line type="monotone" dataKey="mood" stroke="#7c3aed" strokeWidth={2} dot={{ r: 3 }} />
-                                            <Line type="monotone" dataKey="stress" stroke="#dc2626" strokeWidth={2} dot={{ r: 3 }} />
-                                            <Line type="monotone" dataKey="joint_pain" stroke="#be185d" strokeWidth={2} dot={{ r: 3 }} />
+                                            {/* Line keys match your DB columns and Backend Map */}
+                                            <Line type="monotone" dataKey="energy" stroke="#0F4C5C" strokeWidth={2} dot={{ r: 3 }} name="Energy" />
+                                            <Line type="monotone" dataKey="mood" stroke="#7c3aed" strokeWidth={2} dot={{ r: 3 }} name="Mood" />
+                                            <Line type="monotone" dataKey="sleep" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} name="Sleep" />
+                                            <Line type="monotone" dataKey="stress" stroke="#dc2626" strokeWidth={2} dot={{ r: 3 }} name="Stress" />
+                                            <Line type="monotone" dataKey="joint_pain" stroke="#be185d" strokeWidth={2} dot={{ r: 3 }} name="Joint Pain" />
                                         </LineChart>
                                     </ResponsiveContainer>
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-2">
                                         <Activity size={32} className="opacity-20" />
                                         <p className="text-xs font-bold uppercase tracking-widest">No symptom data recorded</p>
-                                        <p className="text-[10px]">Import a CSV or PDF to see trends</p>
+                                        <p className="text-[10px]">Upload a CSV to visualize progress</p>
                                     </div>
                                 )}
                             </div>

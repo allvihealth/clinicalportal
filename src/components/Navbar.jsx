@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Upload, Users, Menu, X, Calendar, Send, Loader2, LogIn } from 'lucide-react'; // Added LogIn icon
+import { Upload, Users, Menu, X, Calendar, Send, Loader2, LogIn } from 'lucide-react';
 import axios from 'axios';
-import allvi_logo from "../assets/allvi_logo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,6 +13,7 @@ const Navbar = () => {
     ? 'http://127.0.0.1:5000'
     : 'https://allvibackend.onrender.com';
 
+  // Base styles for navigation links
   const navLinkStyle = ({ isActive }) => ({
     textDecoration: 'none',
     fontSize: '14px',
@@ -27,7 +27,7 @@ const Navbar = () => {
   });
 
   const handleAppointmentSubmit = async () => {
-    let patientId = "ALLVI-2784"
+    let patientId = "ALLVI-2784";
     if (!patientId) return alert("Please select a patient first.");
     setSending(true);
     try {
@@ -88,12 +88,15 @@ const Navbar = () => {
             <NavLink to="/admin" style={navLinkStyle}><Users size={16} /> AdminPortal</NavLink>
             <NavLink to="/login" style={navLinkStyle}> <LogIn size={16} />Login</NavLink>
             
-            {/* NEW LOGIN NAVLINK */}
-            <NavLink to="/register" style={navLinkStyle}>
-                <div style={styles.loginIconBtn}>
-                    Register
-                </div>
-
+            {/* REGISTER NAVLINK - Desktop */}
+            <NavLink 
+              to="/register" 
+              style={({ isActive }) => ({
+                ...navLinkStyle({ isActive }),
+                ...styles.loginIconBtn
+              })}
+            >
+              Register
             </NavLink>
           </div>
         </div>
@@ -114,16 +117,30 @@ const Navbar = () => {
         {/* MOBILE DROPDOWN */}
         {isOpen && (
           <div className="nav-links-mobile" style={styles.mobileNavGroup}>
-            
-            <NavLink to="/phase1upload" style={navLinkStyle} onClick={() => setIsOpen(false)}><Upload size={18} /> Upload Report</NavLink>
-            <NavLink to="/admin" style={navLinkStyle} onClick={() => setIsOpen(false)}><Users size={18} /> Admin Portal</NavLink>
-            <NavLink to="/login" style={navLinkStyle} onClick={() => setIsOpen(false)}><LogIn size={18} />Login</NavLink>
-            <NavLink to="/register" style={navLinkStyle,styles.loginIconBtn}  onClick={() => setIsOpen(false)}>Register</NavLink>
+            <NavLink to="/phase1upload" style={navLinkStyle} onClick={() => setIsOpen(false)}>
+                <Upload size={18} /> Upload Report
+            </NavLink>
+            <NavLink to="/admin" style={navLinkStyle} onClick={() => setIsOpen(false)}>
+                <Users size={18} /> Admin Portal
+            </NavLink>
+            <NavLink to="/login" style={navLinkStyle} onClick={() => setIsOpen(false)}>
+                <LogIn size={18} /> Login
+            </NavLink>
+            <NavLink 
+              to="/register" 
+              onClick={() => setIsOpen(false)}
+              style={({ isActive }) => ({
+                ...navLinkStyle({ isActive }),
+                ...styles.loginIconBtn
+              })}
+            >
+              Register
+            </NavLink>
           </div>
         )}
       </nav>
 
-      {/* MODAL (Unchanged) */}
+      {/* MODAL */}
       {isModalOpen && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
@@ -155,7 +172,6 @@ const Navbar = () => {
 };
 
 const styles = {
-  // Existing styles...
   nav: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -172,17 +188,18 @@ const styles = {
   desktopRightGroup: { display: 'flex', alignItems: 'center', marginLeft: 'auto', marginRight: '40px' },
   navGroup: { display: 'flex', gap: '30px', alignItems: 'center' },
   
-  // Custom Login Button Style inside NavLink
   loginIconBtn: {
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: '8px',
     padding: '8px 16px',
     borderRadius: '10px',
     border: '1.5px solid #0F4C5C',
     color: '#0F4C5C',
     transition: 'all 0.3s ease',
-    maxWidth:"6rem",
+    width: 'fit-content',
+    minWidth: '6rem',
   },
 
   appointmentBtn: {
