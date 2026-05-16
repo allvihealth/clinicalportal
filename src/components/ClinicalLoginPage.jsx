@@ -269,4 +269,4 @@ const styles = {
   }
 };
 
-export default ClinicalLoginPage;
+export default ClinicalLoginPage;  
