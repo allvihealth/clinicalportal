@@ -17,7 +17,7 @@ import { LogIn } from 'lucide-react';
 // Simple wrapper for the Patient Dashboard to extract the ID from URL
 const DashboardWrapper = () => {
     const { id } = useParams();
-    return <Dashboard/>;
+    return <Dashboard patientId={id} />;
 };
 
 function App() {

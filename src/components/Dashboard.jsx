@@ -287,7 +287,7 @@ const CategoryScoreSummary = ({ labData }) => {
                         }}>
                             <span style={{
                                 width: 28, height: 28, borderRadius: '8px', backgroundColor: cat.accent,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                display: 'flex', alignItems: 'center', justifycontent: 'center',
                                 fontSize: '12px', color: cat.color, fontWeight: 900, flexShrink: 0
                             }}>{cat.icon}</span>
                             <span style={{ flex: 1, fontSize: '11px', fontWeight: 800, color: '#1e293b' }}>
@@ -427,7 +427,7 @@ const CategorySection = ({ cat, labData, patientLabRanges }) => {
                 borderBottom: open ? '1px solid #f1f5f9' : 'none'
             }}>
                 <span style={{
-                    width: 30, height: 30, borderRadius: '8px', backgroundColor: cat.accent, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: 30, height: 30, borderRadius: '8px', backgroundColor: cat.accent, display: 'flex', alignItems: 'center', justifycontent: 'center',
                     fontSize: '13px', flexShrink: 0, color: cat.color, fontWeight: 900
                 }}>{cat.icon}</span>
                 <span style={{ flex: 1, textAlign: 'left', fontSize: '11px', fontWeight: 900, color: '#1e293b', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
@@ -663,7 +663,6 @@ const PatientReviewView = ({ reviews }) => {
     const latestReview = reviews[0];
     const date = new Date(latestReview.sent_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-    // Split to remove the AI summary text from the patient view
     const cleanMessage = latestReview.message_text
         ? latestReview.message_text.split('=== AI SUMMARY REFERENCE ===')[0].trim()
         : '';
@@ -730,24 +729,19 @@ const Dashboard = ({ patientId }) => {
     const [data, setData] = useState({ labs: [], symptoms: [], specialistReviews: [] });
     const [demographics, setDemographics] = useState({ age: '—', gender: '—' });
     const [intakeData, setIntakeData] = useState(null);
-
-    // ✅ HOOK MOVED HERE: Safely inside the component
     const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
-
     const [isMounted, setIsMounted] = useState(false);
     const [loading, setLoading] = useState(true);
-
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [notes, setNotes] = useState('');
     const [sending, setSending] = useState(false);
 
     const dashboardRef = useRef(null);
 
-     const baseURL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    const baseURL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://127.0.0.1:5000'
         : import.meta.env.VITE_SERVER_URL;
 
-    console.log(baseURL)
     useEffect(() => {
         setIsMounted(true);
         fetchDashboardData();
@@ -803,17 +797,13 @@ const Dashboard = ({ patientId }) => {
     };
 
     const getMergedLabData = () => {
-        // Initialize the merged object with an empty 'meta' object so it can hold the units/ranges
         const merged = { meta: {} };
 
         if (data.labs && data.labs.length > 0) {
             [...data.labs].reverse().forEach(report => {
                 Object.entries(report).forEach(([k, v]) => {
-                    // Skip the structural keys
                     if (!['id', 'test_date', 'report_type', 'created_at', 'patient_id', 'meta'].includes(k) && !(k in merged)) {
-                        merged[k] = v; // Save the value (e.g., 2.5)
-
-                        // CRITICAL FIX: Also grab the meta info (unit, ref_range) for this specific marker
+                        merged[k] = v;
                         if (report.meta && report.meta[k]) {
                             merged.meta[k] = report.meta[k];
                         }
@@ -839,30 +829,25 @@ const Dashboard = ({ patientId }) => {
             header: true,
             skipEmptyLines: true,
             complete: async (results) => {
-                // results.data will be an array of objects based on CSV headers
                 try {
                     const response = await fetch(`${baseURL}/api/patient/import-symptoms`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            patientId: patientId, // Ensure you have this ID
+                            patientId: patientId,
                             symptoms: results.data
                         }),
                     });
                     if (!response.ok) {
-                        const errorText = await response.text(); // Read as text first
+                        const errorText = await response.text();
                         console.error("Server Error:", errorText);
                         return alert(`Upload failed: ${response.status} ${response.statusText}`);
                     }
 
                     const result = await response.json();
-                    
-
-
                     if (result.success) {
                         alert("Symptoms imported successfully!");
-                         await  fetchDashboardData()
-                        // Trigger a re-fetch of your 'data.symptoms' here
+                        await fetchDashboardData();
                     }
                 } catch (error) {
                     console.error("Error uploading symptoms:", error);
@@ -870,6 +855,7 @@ const Dashboard = ({ patientId }) => {
             }
         });
     };
+
     const ChartCard = ({ title, dataKey, color, data }) => {
         const latestEntry = [...data].reverse().find(entry => entry[dataKey] !== undefined);
         const meta = latestEntry?.meta?.[dataKey] || {};
@@ -1004,7 +990,6 @@ const Dashboard = ({ patientId }) => {
                         </div>
                     </div>
 
-                    {/* ── NEW: PATIENT REVIEW VIEW ── */}
                     <PatientReviewView reviews={data.specialistReviews} />
 
                     <IntakeSummary intake={intakeData} />
@@ -1033,8 +1018,6 @@ const Dashboard = ({ patientId }) => {
                             <h2 className="text-[11px] font-black text-[#1F2937]/40 uppercase tracking-widest">
                                 Symptom Correlation Trends
                             </h2>
-
-                            {/* Hidden File Input */}
                             <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded text-[10px] font-bold uppercase transition-colors">
                                 Upload CSV
                                 <input
@@ -1062,8 +1045,6 @@ const Dashboard = ({ patientId }) => {
                                                 contentStyle={{ borderRadius: '12px', backgroundColor: '#1F2937', color: '#fff', border: 'none' }}
                                             />
                                             <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '20px' }} />
-
-                                            {/* Line keys match your DB columns and Backend Map */}
                                             <Line type="monotone" dataKey="energy" stroke="#0F4C5C" strokeWidth={2} dot={{ r: 3 }} name="Energy" />
                                             <Line type="monotone" dataKey="mood" stroke="#7c3aed" strokeWidth={2} dot={{ r: 3 }} name="Mood" />
                                             <Line type="monotone" dataKey="sleep" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} name="Sleep" />
@@ -1092,27 +1073,23 @@ const Dashboard = ({ patientId }) => {
                                 intake={intakeData}
                             />
                         </div>
-
                     </section>
 
-                    {/* ── BUTTON TO NAVIGATE TO NEW PAGE ── */}
                     <section className="no-print pt-8 flex justify-center">
                         <button
                             disabled={isGeneratingSummary}
                             onClick={async () => {
                                 setIsGeneratingSummary(true);
                                 try {
-                                    // 1. Ask the backend to generate the AI insights based on ALL data
                                     const response = await axios.get(`${baseURL}/api/patient/insights/${patientId}`);
                                     const generatedInsights = response.data.success ? response.data.insights : "AI Analysis unavailable.";
 
-                                    // 2. Navigate to the new page and pass the fresh insights through state
                                     navigate(`/clinical-summary/${patientId}`, {
                                         state: {
                                             profile: demographics,
                                             intake: intakeData,
                                             labData: getMergedLabData(),
-                                            aiInsights: generatedInsights // <-- Replaced null with actual AI data!
+                                            aiInsights: generatedInsights
                                         }
                                     });
                                 } catch (err) {
@@ -1154,7 +1131,6 @@ const Dashboard = ({ patientId }) => {
                 </div>
             </div>
 
-            {/* ── Appointment Modal ── */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 no-print">
                     <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-200">
