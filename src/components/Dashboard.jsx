@@ -6,7 +6,7 @@ import Papa from 'papaparse';
 import {
     Activity, FileUp, Info, Calendar, Send, X, Loader2, FlaskConical, Search,
     ChevronDown, ChevronUp, AlertTriangle, ClipboardList, FilePlus, CheckCircle2,
-    FileText, LayoutDashboard, CheckSquare, BarChart2, BookOpen, MessageSquare, PhoneCall, Printer, LogOut
+    FileText, LayoutDashboard, CheckSquare, BarChart2, BookOpen, MessageSquare, PhoneCall, Printer, LogOut, Menu,PanelLeftOpen,PanelLeftClose
 } from 'lucide-react';
 import AIInsights from './AIInsights';
 
@@ -36,7 +36,7 @@ const MARKER_REGISTRY = {
             fasting_glucose: { label: 'Fasting Glucose', unit: 'mg/dL', range: [70, 99], optimal: [72, 90], note: 'Prediabetes: 100–125' },
             fasting_insulin: { label: 'Fasting Insulin', unit: 'µIU/mL', range: [2, 10], optimal: [2, 7], note: 'Optimal <7 for PCOS' },
             homa_ir: { label: 'HOMA-IR', unit: 'index', range: [0, 1.9], optimal: [0, 1.5], note: '>2.5 suggests insulin resistance' },
-            hba1c: { label: 'HbA1c', unit: '%', range: [4.0, 5.6], optimal: [4.0, 5.3], note: 'Prediabetes: 5.7–6.4%' },
+            hba1c: { label: '%', range: [4.0, 5.6], optimal: [4.0, 5.3], note: 'Prediabetes: 5.7–6.4%' },
         }
     },
     pcos: {
@@ -488,6 +488,8 @@ const Dashboard = ({ patientId: propPatientId }) => {
     const [checkedItems, setCheckedItems] = useState([]);
     const [streak, setStreak] = useState(0);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
     // Helper to handle checklist toggles
     const toggleChecked = (item) => {
         setCheckedItems(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
@@ -566,7 +568,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
                 }));
                 setIntakeData(res.data.intake);
                 setMessages(res.data.messages || []);
-                Streak(res.data.streak || 0);
+                setStreak(res.data.streak || 0);
             }
         } catch (err) {
             console.error("Dashboard fetch operational safeguard hit:", err);
@@ -759,15 +761,15 @@ const Dashboard = ({ patientId: propPatientId }) => {
     .nav-streak strong { color: #F5C842; }
     .nav-avatar { width: 36px; height: 36px; border-radius: 50%; background: #EDE7DB; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #0F4C5C; }
     
-    .layout { display: flex; min-height: calc(100vh - 64px); }
-    .sidebar { width: 220px; min-width: 220px; background: #FFFFFF; border-right: 1px solid rgba(15,76,92,0.08); padding: 24px 0; position: sticky; top: 64px; height: calc(100vh - 64px); overflow-y: auto; flex-shrink: 0; text-align: left; }
+    .layout { display: flex; min-height: calc(100vh - 64px); position: relative; }
+    .sidebar { width: 220px; min-width: 220px; background: #FFFFFF; border-right: 1px solid rgba(15,76,92,0.08); padding: 24px 0; position: sticky; top: 64px; height: calc(100vh - 64px); overflow-y: auto; flex-shrink: 0; text-align: left; transition: transform 0.3s ease; z-index: 90; }
     .si-section { padding: 16px 20px 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(107,114,128,0.7); }
     .si { display: flex; align-items: center; gap: 10px; padding: 11px 20px; font-size: 14px; font-weight: 500; color: #6B7280; cursor: pointer; border-left: 3px solid transparent; transition: all 0.15s; }
     .si:hover { background: #E8F4F7; color: #0F4C5C; }
     .si.on { background: #E8F4F7; color: #0F4C5C; border-left-color: #0F4C5C; font-weight: 600; }
     .si-icon { width: 20px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
     
-    .main { flex: 1; padding: 32px; max-width: 960px; text-align: left; }
+    .main { flex: 1; padding: 32px; max-width: 100%; text-align: left; box-sizing: border-box; }
     .card { background: #FFFFFF; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(15,76,92,0.08); border: 1px solid rgba(15,76,92,0.06); margin-bottom: 24px; }
     .ph { margin-bottom: 28px; }
     .ph-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 600; color: #1F2937; }
@@ -784,7 +786,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
     .kpi-val.gr { color: #2D6A4F; }
     .kpi-sub { font-size: 12px; color: #6B7280; margin-top: 6px; }
     
-    .cb { background: #0F4C5C; border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; cursor: pointer; }
+    .cb { background: #0F4C5C; border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; cursor: pointer; gap: 16px; }
     .cb h3 { font-size: 16px; font-weight: 600; color: #F7F1E8; }
     .cb p { font-size: 13px; color: rgba(247,241,232,0.7); margin-top: 2px; }
     .cb-btn { background: #F7F1E8; color: #0F4C5C; border: none; border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
@@ -844,13 +846,34 @@ const Dashboard = ({ patientId: propPatientId }) => {
     .mir { display: flex; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #EDE7DB; }
     .mi { flex: 1; padding: 11px 16px; border: 1px solid rgba(15,76,92,0.15); border-radius: 8px; font-family: inherit; font-size: 14px; background: #F7F1E8; color: #1F2937; outline: none; }
     .ms { background: #0F4C5C; color: #F7F1E8; border: none; border-radius: 8px; padding: 11px 18px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; }
+
+    .mobile-menu-toggle { display: none; background: none; border: none; color: #F7F1E8; cursor: pointer; padding: 4px; align-items: center; justify-content: center; }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); z-index: 85; backdrop-filter: blur(2px); }
+
+    @media (max-width: 768px) {
+        .mobile-menu-toggle { display: flex; }
+        .sidebar { position: fixed; left: 0; top: 64px; height: calc(100vh - 64px); transform: translateX(-100%); box-shadow: 4px 0 12px rgba(0,0,0,0.1); }
+        .sidebar.open { transform: translateX(0); }
+        .sidebar-overlay.open { display: block; }
+        .g2 { grid-template-columns: 1fr; gap: 16px; }
+        .main { padding: 16px; }
+        .cb { flex-direction: column; align-items: flex-start; }
+        .cb-btn { width: 100%; text-align: center; }
+        .nav { padding: 0 16px; }
+        .nav-streak { font-size: 11px; padding: 4px 10px; }
+    }
     `
             }} />
 
             {/* TOP BAR BRAND ENGINE NAVIGATION */}
             <nav className="nav">
-                <div className="nav-logo">
-                    Allvi <span>Reimagined Patient Care</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <button className="mobile-menu-toggle" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+                        {isSidebarOpen ? <PanelLeftClose size={24} className="door-icon transition-close" /> : <PanelLeftOpen size={24} className="door-icon transition-open" />}
+                    </button>
+                    <div className="nav-logo">
+                        Allvi <span>Reimagined Patient Care</span>
+                    </div>
                 </div>
 
                 <div className="nav-right">
@@ -883,47 +906,47 @@ const Dashboard = ({ patientId: propPatientId }) => {
             </nav>
 
             <div className="layout">
+                {/* Mobile Drawer Backdrop overlay */}
+                <div className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} onClick={() => setIsSidebarOpen(false)} />
+
                 {/* SIDEBAR NAVIGATION PANEL */}
-                <aside className="sidebar no-print">
+                <aside className={`sidebar no-print ${isSidebarOpen ? 'open' : ''}`}>
                     <div className="si-section">Overview</div>
-                    <div className={`si ${currentScreen === 'dashboard' ? 'on' : ''}`} onClick={() => setCurrentScreen('dashboard')}>
+                    <div className={`si ${currentScreen === 'dashboard' ? 'on' : ''}`} onClick={() => { setCurrentScreen('dashboard'); setIsSidebarOpen(false); }}>
                         <span className="si-icon"><LayoutDashboard size={16} /></span> Dashboard
                     </div>
-                    <div className={`si ${currentScreen === 'checkin' ? 'on' : ''}`} onClick={() => setCurrentScreen('checkin')}>
+                    <div className={`si ${currentScreen === 'checkin' ? 'on' : ''}`} onClick={() => { setCurrentScreen('checkin'); setIsSidebarOpen(false); }}>
                         <span className="si-icon"><CheckSquare size={16} /></span> Daily Check-In
                     </div>
 
                     <div className="si-section">Reports</div>
-                    <div className={`si ${currentScreen === 'reports' ? 'on' : ''}`} onClick={() => setCurrentScreen('reports')}>
+                    <div className={`si ${currentScreen === 'reports' ? 'on' : ''}`} onClick={() => { setCurrentScreen('reports'); setIsSidebarOpen(false); }}>
                         <span className="si-icon"><ClipboardList size={16} /></span> Weekly Reports
                     </div>
-                    <div className={`si ${currentScreen === 'advocacy' ? 'on' : ''}`} onClick={() => setCurrentScreen('advocacy')}>
+                    <div className={`si ${currentScreen === 'advocacy' ? 'on' : ''}`} onClick={() => { setCurrentScreen('advocacy'); setIsSidebarOpen(false); }}>
                         <span className="si-icon"><FileText size={16} /></span> Advocacy Doc
                     </div>
 
                     <div className="si-section">Health</div>
-                    <div className={`si ${currentScreen === 'labs' ? 'on' : ''}`} onClick={() => setCurrentScreen('labs')}>
+                    <div className={`si ${currentScreen === 'labs' ? 'on' : ''}`} onClick={() => { setCurrentScreen('labs'); setIsSidebarOpen(false); }}>
                         <span className="si-icon"><FlaskConical size={16} /></span> Lab Results
                     </div>
-                    <div className={`si ${currentScreen === 'protocol' ? 'on' : ''}`} onClick={() => setCurrentScreen('protocol')}>
+                    <div className={`si ${currentScreen === 'protocol' ? 'on' : ''}`} onClick={() => { setCurrentScreen('protocol'); setIsSidebarOpen(false); }}>
                         <span className="si-icon"><BookOpen size={16} /></span> My Protocol
                     </div>
 
                     <div className="si-section">Support</div>
-                    <div className={`si ${currentScreen === 'messages' ? 'on' : ''}`} onClick={() => setCurrentScreen('messages')}>
+                    <div className={`si ${currentScreen === 'messages' ? 'on' : ''}`} onClick={() => { setCurrentScreen('messages'); setIsSidebarOpen(false); }}>
                         <span className="si-icon"><MessageSquare size={16} /></span> Messages
                     </div>
-                    <div className="si" onClick={() => setIsModalOpen(true)}>
+                    <div className="si" onClick={() => { setIsModalOpen(true); setIsSidebarOpen(false); }}>
                         <span className="si-icon"><PhoneCall size={16} /></span> Book a Call
                     </div>
-                    <aside className="sidebar no-print">
-                        {/* ... your existing menu items ... */}
-
-                        <div className="si-section" style={{ marginTop: 'auto' }}>Account</div>
-                        <div className="si" onClick={handleLogout}>
-                            <span className="si-icon"><LogOut size={16} /></span> Logout
-                        </div>
-                    </aside>
+                    
+                    <div className="si-section" style={{ marginTop: 'auto' }}>Account</div>
+                    <div className="si" onClick={handleLogout}>
+                        <span className="si-icon"><LogOut size={16} /></span> Logout
+                    </div>
                 </aside>
 
                 {/* PRIMARY SUB-SCREEN ROUTING SYSTEM CONTROLLER */}
@@ -973,7 +996,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
 
                             <div className="g2">
                                 {/* DYNAMIC TREND CHART */}
-                                <div className="card">
+                                <div className="card" style={{ minWidth: 0 }}>
                                     <div className="card-title">11-Week Trend</div>
 
                                     <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', flexWrap: 'wrap' }}>
@@ -1027,7 +1050,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
                                 </div>
                             </section>
 
-                            <section className="card" style={{ marginBottom: '24px' }}>
+                            <section className="card">
                                 <LabAnalysis labData={getMergedLabData()} patientGoal={demographics.goal || 'general'} patientLabRanges={data.labRanges} />
                             </section>
 
@@ -1153,7 +1176,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
 
                                 {/* 7. SUPPLEMENTS (GRID) */}
                                 <div className="cs-title">Supplements taken today</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '24px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginBottom: '24px' }}>
                                     {['Selenium 200mcg', 'Magnesium (eve)', 'B12 + K2', 'Omega-3', 'Iron 50mg (alt day)', 'Zinc 15mg'].map(supp => (
                                         <div
                                             key={supp}
@@ -1199,7 +1222,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
                                 <h2 className="rw" style={{ fontFamily: "'Playfair Display', serif", fontSize: '32px', fontWeight: 600, color: '#F7F1E8', marginBottom: '4px' }}>Week 11</h2>
                                 <p className="rm" style={{ fontSize: '13px', color: 'rgba(247,241,232,0.7)', marginBottom: '16px' }}>April 22–26, 2026 · 75 days tracked · 100% compliance · New iron protocol started</p>
 
-                                <div className="rk" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                                <div className="rk" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '16px' }}>
                                     <div className="rkc" style={{ background: 'rgba(247,241,232,0.1)', borderRadius: '10px', padding: '14px', textAlign: 'center', border: 'none', boxShadow: 'none' }}>
                                         <div className="rkv" style={{ fontFamily: "'Playfair Display', serif", fontSize: '28px', color: '#F7F1E8' }}>{dynamicEnergy}</div>
                                         <div className="rkl" style={{ fontSize: '11px', color: 'rgba(247,241,232,0.65)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '3px' }}>Energy</div>
@@ -1232,7 +1255,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
                             <div className="card" style={{ marginBottom: '20px', background: '#FFFFFF', padding: '24px', borderRadius: '12px' }}>
                                 <div className="card-title" style={{ fontFamily: "'Playfair Display', serif", fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>Clinical Monitoring</div>
 
-                                <div className="dr">
+                                <div className="dr" style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
                                     <div className="ds gr" style={{ background: '#EAF5EE', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🟢</div>
                                     <div>
                                         <div className="dn" style={{ fontSize: '14px', fontWeight: 600, color: '#1F2937', marginBottom: '4px' }}>
@@ -1245,7 +1268,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
                                     </div>
                                 </div>
 
-                                <div className="dr">
+                                <div className="dr" style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
                                     <div className="ds am" style={{ background: '#FDF3E7', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🟡</div>
                                     <div>
                                         <div className="dn" style={{ fontSize: '14px', fontWeight: 600, color: '#1F2937', marginBottom: '4px' }}>
@@ -1258,7 +1281,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
                                     </div>
                                 </div>
 
-                                <div className="dr">
+                                <div className="dr" style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
                                     <div className="ds am" style={{ background: '#FDF3E7', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🟡</div>
                                     <div>
                                         <div className="dn" style={{ fontSize: '14px', fontWeight: 600, color: '#1F2937', marginBottom: '4px' }}>
@@ -1271,7 +1294,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
                                     </div>
                                 </div>
 
-                                <div className="dr">
+                                <div className="dr" style={{ display: 'flex', gap: '16px' }}>
                                     <div className="ds gr" style={{ background: '#EAF5EE', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🟢</div>
                                     <div>
                                         <div className="dn" style={{ fontSize: '14px', fontWeight: 600, color: '#1F2937', marginBottom: '4px' }}>
@@ -1362,34 +1385,36 @@ const Dashboard = ({ patientId: propPatientId }) => {
                                     <div className="avs-title" style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0F4C5C', borderBottom: '1px solid #E8F4F7', paddingBottom: '6px', marginBottom: '12px' }}>
                                         Patient Context
                                     </div>
-                                    <table className="avt" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                        <tbody>
-                                            <tr>
-                                                <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: '1px solid #EDE7DB', verticalAlign: 'top', fontWeight: 600, color: '#6B7280', width: '38%' }}>Identity Profile</td>
-                                                <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: '1px solid #EDE7DB', verticalAlign: 'top', color: '#1F2937' }}>
-                                                    {demographics.name || 'Rashmi'} ({demographics.age ? `Age: ${demographics.age}` : '—'} · {demographics.gender || '—'})
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: '1px solid #EDE7DB', verticalAlign: 'top', fontWeight: 600, color: '#6B7280' }}>Diagnosis Profile</td>
-                                                <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: '1px solid #EDE7DB', verticalAlign: 'top', color: '#1F2937' }}>
-                                                    {intakeData?.diagnoses?.length > 0 ? intakeData.diagnoses.join(', ') : "Hashimoto's Thyroiditis — January 2026"}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: '1px solid #EDE7DB', verticalAlign: 'top', fontWeight: 600, color: '#6B7280' }}>Medication Track</td>
-                                                <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: '1px solid #EDE7DB', verticalAlign: 'top', color: '#1F2937' }}>
-                                                    Levothyroxine 25mcg daily (taken 6am). Day 77 on profile timeline records.
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: 'none', verticalAlign: 'top', fontWeight: 600, color: '#6B7280' }}>Program Focus Goal</td>
-                                                <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: 'none', verticalAlign: 'top', textTransform: 'uppercase', fontWeight: 600, color: '#0F4C5C' }}>
-                                                    {demographics.goal || 'thyroid'} focus
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div style={{ overflowX: 'auto' }}>
+                                        <table className="avt" style={{ width: '100%', borderCollapse: 'collapse', minWidth: '400px' }}>
+                                            <tbody>
+                                                <tr>
+                                                    <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: '1px solid #EDE7DB', verticalAlign: 'top', fontWeight: 600, color: '#6B7280', width: '38%' }}>Identity Profile</td>
+                                                    <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: '1px solid #EDE7DB', verticalAlign: 'top', color: '#1F2937' }}>
+                                                        {demographics.name || 'Rashmi'} ({demographics.age ? `Age: ${demographics.age}` : '—'} · {demographics.gender || '—'})
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: '1px solid #EDE7DB', verticalAlign: 'top', fontWeight: 600, color: '#6B7280' }}>Diagnosis Profile</td>
+                                                    <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: '1px solid #EDE7DB', verticalAlign: 'top', color: '#1F2937' }}>
+                                                        {intakeData?.diagnoses?.length > 0 ? intakeData.diagnoses.join(', ') : "Hashimoto's Thyroiditis — January 2026"}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: '1px solid #EDE7DB', verticalAlign: 'top', fontWeight: 600, color: '#6B7280' }}>Medication Track</td>
+                                                    <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: '1px solid #EDE7DB', verticalAlign: 'top', color: '#1F2937' }}>
+                                                        Levothyroxine 25mcg daily (taken 6am). Day 77 on profile timeline records.
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: 'none', verticalAlign: 'top', fontWeight: 600, color: '#6B7280' }}>Program Focus Goal</td>
+                                                    <td style={{ padding: '10px 4px', fontSize: '13px', borderBottom: 'none', verticalAlign: 'top', textTransform: 'uppercase', fontWeight: 600, color: '#0F4C5C' }}>
+                                                        {demographics.goal || 'thyroid'} focus
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
 
                                 {/* 2. RESTORED & POLISHED LABORATORY TRAJECTORY SECTION PANEL */}
@@ -1398,7 +1423,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
                                         Laboratory Trajectory
                                     </div>
                                     <div style={{ overflowX: 'auto' }}>
-                                        <table className="lt" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <table className="lt" style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                                             <thead>
                                                 <tr>
                                                     <th style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#6B7280', padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid #EDE7DB' }}>Test Vector</th>
@@ -1529,7 +1554,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
                     {/* ═══════════════════════ SCREEN 5: MY PROTOCOL SCREEN ═══════════════════════ */}
                     {currentScreen === 'protocol' && (
                         <>
-                            <div className="ph" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div className="ph" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
                                 <div>
                                     <div className="ph-title">My Protocol</div>
                                     <div className="ph-sub">Personalised Lifestyle Support · Hashimoto's · Delivered Week 2 · Updated May 2026</div>
@@ -1539,7 +1564,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
 
                             {/* SUMMARY CARD */}
                             <div className="card" style={{ background: '#0F4C5C', border: 'none', color: '#F7F1E8', marginBottom: '22px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                                     <div><div style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'rgba(247,241,232,0.6)', marginBottom: '6px' }}>Diagnosis</div><div style={{ fontSize: '14px', fontWeight: 600 }}>Hashimoto's Thyroiditis</div><div style={{ fontSize: '12px', color: 'rgba(247,241,232,0.7)', marginTop: '2px' }}>Diagnosed Jan 2026</div></div>
                                     <div><div style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'rgba(247,241,232,0.6)', marginBottom: '6px' }}>Top Symptoms at Start</div><div style={{ fontSize: '13px', color: '#F7F1E8' }}>Constipation · Mood · Cold intolerance</div></div>
                                     <div><div style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'rgba(247,241,232,0.6)', marginBottom: '6px' }}>Primary Goals</div><div style={{ fontSize: '13px', color: '#F7F1E8' }}>Improve GI · Slow autoimmune attack</div></div>
@@ -1568,14 +1593,16 @@ const Dashboard = ({ patientId: propPatientId }) => {
                                 {activeProtocolTab === 'sup' && (
                                     <div className="pt-content on">
                                         <p style={{ fontSize: '13px', color: '#6B7280', padding: '4px 0 16px' }}>Clinician-reviewed. Do not change doses without checking with your Allvi team.</p>
-                                        <table className="stab">
-                                            <thead><tr><th>Supplement</th><th>Dose</th><th>Why</th></tr></thead>
-                                            <tbody>
-                                                <tr><td style={{ fontWeight: 600 }}>Selenium</td><td>200mcg</td><td>T4→T3 conversion; reduces TPO antibodies</td></tr>
-                                                <tr style={{ background: '#F7F1E8' }}><td style={{ fontWeight: 600 }}>Magnesium glycinate</td><td>300–400mg</td><td>Sleep, mood, gut motility</td></tr>
-                                                <tr><td style={{ fontWeight: 600 }}>Iron 50mg ⚠</td><td>50mg ferrous bisglycinate</td><td>Ferritin at 19 → target 70–90. Alt day maximises absorption.</td></tr>
-                                            </tbody>
-                                        </table>
+                                        <div style={{ overflowX: 'auto' }}>
+                                            <table className="stab" style={{ minWidth: '500px' }}>
+                                                <thead><tr><th>Supplement</th><th>Dose</th><th>Why</th></tr></thead>
+                                                <tbody>
+                                                    <tr><td style={{ fontWeight: 600 }}>Selenium</td><td>200mcg</td><td>T4→T3 conversion; reduces TPO antibodies</td></tr>
+                                                    <tr style={{ background: '#F7F1E8' }}><td style={{ fontWeight: 600 }}>Magnesium glycinate</td><td>300–400mg</td><td>Sleep, mood, gut motility</td></tr>
+                                                    <tr><td style={{ fontWeight: 600 }}>Iron 50mg ⚠</td><td>50mg ferrous bisglycinate</td><td>Ferritin at 19 → target 70–90. Alt day maximises absorption.</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                         <div style={{ marginTop: '12px', padding: '12px', background: '#FDF3E7', borderRadius: '8px', fontSize: '12px', color: '#C97B2E' }}>⚠ Iron: avoid coffee, tea, or calcium within 1 hour. GI side effects expected weeks 1–2 — increase hydration on iron days.</div>
                                     </div>
                                 )}
@@ -1593,8 +1620,6 @@ const Dashboard = ({ patientId: propPatientId }) => {
                                         </div>
                                     </div>
                                 )}
-
-                                {/* You can easily add other tabs (exc, slp, str) following the same structure */}
                             </div>
                         </>
                     )}
@@ -1610,7 +1635,7 @@ const Dashboard = ({ patientId: propPatientId }) => {
                             <div className="card">
                                 <div className="mt">
                                     {messages.map((msg, index) => (
-                                        <div key={index} className={`msg ${msg.sender === 'patient' ? 'p' : 'a'}`}>
+                                        <div key={index} className={`msg ${msg.sender === 'patient' ? 'p' : 'a'}`} style={{ width: '100%' }}>
                                             <div className="mb">{msg.text}</div>
                                             <div className="mm">{msg.time}</div>
                                         </div>
