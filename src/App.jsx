@@ -1,108 +1,92 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, useParams, useNavigate, useLocation } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Phase1Upload from './components/Phase1Upload';
-import Phase1Review from './components/Phase1Review';
-import Dashboard from './components/Dashboard';
-import AdminPortal from './components/AdminPortal'; 
-import PatientProfile from './components/PatientProfile';
-import UserPortal from './components/UserPortal';
-import OnboardingPage from './components/OnboardingPage';
-import ClinicalSummary from './components/ClinicalSummary';
-import IntakeForm from './components/IntakeForm';
-import ClinicalLoginPage from './components/ClinicalLoginPage'; 
-import ClinicDashboard from './components/ClinicDashboard'; 
-import { LogIn } from 'lucide-react';
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
-// Simple wrapper for the Patient Dashboard to extract the ID from URL
-const DashboardWrapper = () => {
-    const { id } = useParams();
-    return <Dashboard patientId={id} />;
+// Import your clinical components
+import ClinicalLoginPage from './components/ClinicalLoginPage';
+import ClinicDashboard from './components/ClinicDashboard';
+import ClinicalPatientDashboard from './components/ClinicalPatientDashboard'; // NEW: Imported patient dashboard
+
+/**
+ * Protected Route Wrapper
+ * Checks for the auth token set by ClinicalLoginPage. 
+ */
+const ProtectedClinicRoute = ({ children }) => {
+  const isClinicSession = localStorage.getItem('allvi_clinic_token');
+  
+  if (!isClinicSession) {
+    return <Navigate to="/clinical-login" replace />;
+  }
+  
+  return children;
 };
 
 function App() {
-  const navigate = useNavigate();
-  const location = useLocation(); // Hook to listen to path changes
-
-  // --- OPTIONAL SESSION REDIRECT ---
-  useEffect(() => {
-    const savedId = localStorage.getItem('allvi_auth_token');
-    const isClinicSession = localStorage.getItem('allvi_clinic_token');
-    const publicPaths = ['/login', '/onboarding', '/clinical-login'];
-    
-    // If authenticated as a clinic admin, keep them pinned to the clinical dashboard
-    if (isClinicSession && window.location.pathname === '/clinical-login') {
-      navigate('/clinic-dashboard');
-      return;
-    }
-
-    // Standard patient portal routing redirect
-    if (savedId && publicPaths.includes(window.location.pathname)) {
-        navigate(`/profile/${savedId}`);
-    }
-  }, [navigate]);
-
-  // Determine if the main navbar should be hidden
-  const hideNavbarPaths = ['/clinic-dashboard'];
-  const shouldShowNavbar = !hideNavbarPaths.includes(location.pathname);
-
   return (
     <div className="app-container" style={{ minHeight: '100vh', backgroundColor: "#F7F1E8" }}>
-      
-     {/* Conditionally render Navbar based on current pathname */}
-      {/*shouldShowNavbar && <Navbar />*/} 
-
-      <main style={{  }}>
+      <main>
         <Routes>
-          {/* Public Access to All Routes */}
-          <Route path="/" element={<UserPortal />} />
-          <Route path="/intake" element={<IntakeForm />} />
-
-          <Route path="/phase1upload" element={<Phase1Upload />} />
-          <Route path="/onboarding" element={<OnboardingPage />}/>
-          <Route path="/login" element={<UserPortal />} />
-          <Route path="/register" element={<UserPortal />} />
+          {/* Base route automatically redirects to the clinical login */}
+          <Route path="/" element={<Navigate to="/clinical-login" replace />} />
           
-          {/* Clinical Access Routes */}
+          {/* Public Authentication Route */}
           <Route path="/clinical-login" element={<ClinicalLoginPage />} />
-          {/* Clinical Executive Dashboard */}
-          <Route path="/clinic-dashboard" element={<ClinicDashboard />} />
           
-          {/* Standard Patient Application Flow Routes */}
-          <Route path="/review" element={<Phase1Review />} />
-          <Route path="/dashboard" element={<DashboardWrapper />} />
-          <Route path="/dashboard/:id" element={<DashboardWrapper />} />
-          
-          <Route path="/profile/:patientId" element={<PatientProfile />} />
-          <Route path="/clinical-summary/:patientId" element={<ClinicalSummary/>} />
-          
-          {/* General Admin Portal Route */}
-          <Route path="/admin" element={<AdminPortal />} />
-          
-          {/* 404 Route */}
+          {/* Protected Organizational Dashboard Route (The Panel) */}
+          <Route 
+            path="/clinic-dashboard" 
+            element={
+              <ProtectedClinicRoute>
+                <ClinicDashboard />
+              </ProtectedClinicRoute>
+            } 
+          />
+
+          {/* NEW: Protected Individual Patient Dashboard Route */}
+          <Route 
+            path="/dashboard/:patientId" 
+            element={
+              <ProtectedClinicRoute>
+                <ClinicalPatientDashboard />
+              </ProtectedClinicRoute>
+            } 
+          />
+
+          {/* TEMPORARY: Placeholder for Clinical Summary to prevent 404 errors */}
+          <Route 
+            path="/clinical-summary/:patientId" 
+            element={
+              <ProtectedClinicRoute>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', fontFamily: "'DM Sans', sans-serif" }}>
+                  <h2 style={{ color: '#0F4C5C' }}>Clinical Summary</h2>
+                  <p style={{ color: '#6B7280', marginBottom: '20px' }}>This view is pending implementation.</p>
+                  <a href="/clinic-dashboard" style={{ color: '#0F4C5C', fontWeight: 'bold', textDecoration: 'none' }}>← Back to Panel</a>
+                </div>
+              </ProtectedClinicRoute>
+            } 
+          />
+
+          {/* 404 Catch-all */}
           <Route path="*" element={
-            <div style={{ padding: '40px', textAlign: 'center' }}>
-              <h2 style={{ color: '#0F4C5C' }}>404 - Page Not Found</h2>
-              <button 
-                onClick={() => navigate('/login')} 
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', fontFamily: "'DM Sans', sans-serif" }}>
+              <h2 style={{ color: '#0F4C5C', fontSize: '24px', fontWeight: 'bold' }}>404 - Portal Not Found</h2>
+              <p style={{ color: '#6B7280', margin: '10px 0 24px 0' }}>The requested clinical route does not exist.</p>
+              <a 
+                href="/clinical-login" 
                 style={{ 
-                  marginTop: '20px', 
-                  cursor: 'pointer', 
-                  color: '#0F4C5C', 
-                  fontWeight: 'bold', 
-                  background: 'none', 
-                  border: '1px solid #0F4C5C', 
-                  padding: '10px 20px', 
-                  borderRadius: '10px' 
+                  backgroundColor: '#0F4C5C', 
+                  color: '#F7F1E8', 
+                  padding: '12px 24px', 
+                  borderRadius: '10px', 
+                  textDecoration: 'none',
+                  fontWeight: '600'
                 }}
               >
-                Back to Login
-              </button>
+                Return to Login
+              </a>
             </div>
           } />
         </Routes>
       </main>
-      
     </div>
   );
 }
