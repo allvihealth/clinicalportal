@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import ClinicalPatientDashboard from './ClinicalPatientDashboard';
+import EnrolPatientForm from './clinicalTabs/EnrolPatientForm';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+
 
 
 // Initialize Supabase
@@ -257,6 +259,15 @@ const ClinicDashboard = () => {
   const getPreApptBadge = (status) => {
     if (status === 'Approved') return { bg: theme.greenBg, text: theme.green, label: '✓ Delivered' };
     return { bg: theme.ivoryDark, text: theme.grey, label: status };
+  };
+
+  // Inside ClinicDashboard.jsx component scope:
+  const handleEnrollSubmit = async () => {
+    // 1. Re-fetch table records from Supabase now that backend tables have updated
+    await fetchSupabasePatientPanel();
+    
+    // 2. Cleanly swap tabs back over to your dashboard panel tracker view
+    setActiveTab('panel');
   };
 
   return (
@@ -667,58 +678,13 @@ const ClinicDashboard = () => {
 
               {/* ================= ENROL TAB ================= */}
               {activeTab === 'enrol' && (
-                <div>
-                  <div style={styles.pageHeader}>
-                    <div style={styles.pageTitle}>Enrol a Patient</div>
-                    <div style={styles.pageSub}>A personalised magic link will be sent to the patient's email. They complete onboarding themselves.</div>
-                  </div>
-
-                  <div style={{ ...styles.card, maxWidth: '540px' }}>
-
-                    <div style={{ marginBottom: '16px' }}>
-                      <label style={styles.formLabel}>Patient full name</label>
-                      <input style={styles.formInput} type="text" placeholder="e.g. Sarah Johnson" />
-                    </div>
-
-                    <div style={{ marginBottom: '16px' }}>
-                      <label style={styles.formLabel}>Patient email address</label>
-                      <input style={styles.formInput} type="email" placeholder="patient@email.com" />
-                    </div>
-
-                    <div style={{ marginBottom: '16px' }}>
-                      <label style={styles.formLabel}>Primary condition</label>
-                      <select style={styles.formSelect}>
-                        <option value="">Select condition…</option>
-                        <option>Thyroid Disease (Hashimoto's, Hypothyroid, Hyperthyroid, Graves')</option>
-                        <option>PCOS</option>
-                        <option>Endometriosis</option>
-                        <option>Perimenopause</option>
-                        <option>Menopause</option>
-                      </select>
-                    </div>
-
-                    <div style={{ marginBottom: '16px' }}>
-                      <label style={styles.formLabel}>Referring clinician (optional)</label>
-                      <input style={styles.formInput} type="text" placeholder="e.g. Dr. Sarah Chen" />
-                    </div>
-
-                    <div style={{ marginBottom: '16px' }}>
-                      <label style={styles.formLabel}>Treating clinician email (for pre-appointment summaries)</label>
-                      <input style={styles.formInput} type="email" placeholder="clinician@practice.com" />
-                    </div>
-
-                    <div style={{ padding: '14px', background: theme.tealLight, borderRadius: '8px', marginBottom: '20px', fontSize: '13px', color: theme.teal, lineHeight: '1.5' }}>
-                      ℹ️ A magic link will be sent to the patient's email. They'll complete a condition-specific intake form and set their daily check-in time. The patient will appear in your panel immediately on account creation.
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button style={styles.primaryBtn} onClick={() => setActiveTab('panel')}>Send Invitation →</button>
-                      <button style={styles.ghostBtn} onClick={() => setActiveTab('panel')}>Cancel</button>
-                    </div>
-
-                  </div>
-                </div>
-              )}
+              <EnrolPatientForm 
+                theme={theme}
+                styles={styles}
+                onCancel={() => setActiveTab('panel')}
+                onEnrollSuccess={handleEnrollSubmit}
+              />
+            )}
             </>
           )}
         </main>
