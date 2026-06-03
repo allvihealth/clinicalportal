@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 const EnrolPatientForm = ({ theme, styles, onCancel, onEnrollSuccess }) => {
   // 1. Dynamic Environment Base URL Utility Config
   const getBaseURL = () => {
-      return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-          ? 'http://127.0.0.1:5000'
-          : import.meta.env.VITE_SERVER_URL || '';
+    return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://127.0.0.1:5000'
+      : import.meta.env.VITE_SERVER_URL || '';
   };
 
   // 2. Local UI State Management
@@ -25,13 +25,13 @@ const EnrolPatientForm = ({ theme, styles, onCancel, onEnrollSuccess }) => {
   // 3. Self-Contained Backend Form Submission Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Front-end Validation Gate
     if (!formData.fullName || !formData.email || !formData.condition) {
       alert("Please fill in all required properties.");
       return;
     }
-    
+
     try {
       setSubmitting(true);
       const apiBaseUrl = getBaseURL();
@@ -60,15 +60,18 @@ const EnrolPatientForm = ({ theme, styles, onCancel, onEnrollSuccess }) => {
       }
 
       alert(`🎉 Enrolment invitation dispatched successfully to ${formData.email}!`);
-      
+
       // 4. Notify parent layout shell context structure to drop panels back to list tracker
       if (onEnrollSuccess) {
         onEnrollSuccess();
       }
 
     } catch (err) {
-      console.error("❌ FRONTEND ENROLMENT SUBMIT ERROR:", err.message);
-      alert(`Enrolment Error: ${err.message}`);
+      // 🔍 Deep inspect the actual error payload coming from your host cluster
+      console.error("❌ FULL ERROR OBJECT:", err);
+      console.error("❌ SERVER RETURNED ERROR:", err.response?.data);
+
+      alert(`Enrolment Error: ${err.response?.data?.message || err.message}`);
     } finally {
       setSubmitting(false);
     }
@@ -86,10 +89,10 @@ const EnrolPatientForm = ({ theme, styles, onCancel, onEnrollSuccess }) => {
       <div style={{ ...styles.card, maxWidth: '540px' }}>
         <div style={{ marginBottom: '16px' }}>
           <label style={styles.formLabel}>Patient full name *</label>
-          <input 
-            style={styles.formInput} 
-            type="text" 
-            placeholder="e.g. Sarah Johnson" 
+          <input
+            style={styles.formInput}
+            type="text"
+            placeholder="e.g. Sarah Johnson"
             value={formData.fullName}
             onChange={(e) => handleChange(e, 'fullName')}
             disabled={submitting}
@@ -98,10 +101,10 @@ const EnrolPatientForm = ({ theme, styles, onCancel, onEnrollSuccess }) => {
 
         <div style={{ marginBottom: '16px' }}>
           <label style={styles.formLabel}>Patient email address *</label>
-          <input 
-            style={styles.formInput} 
-            type="email" 
-            placeholder="patient@email.com" 
+          <input
+            style={styles.formInput}
+            type="email"
+            placeholder="patient@email.com"
             value={formData.email}
             onChange={(e) => handleChange(e, 'email')}
             disabled={submitting}
@@ -110,7 +113,7 @@ const EnrolPatientForm = ({ theme, styles, onCancel, onEnrollSuccess }) => {
 
         <div style={{ marginBottom: '16px' }}>
           <label style={styles.formLabel}>Primary condition *</label>
-          <select 
+          <select
             style={styles.formSelect}
             value={formData.condition}
             onChange={(e) => handleChange(e, 'condition')}
@@ -127,10 +130,10 @@ const EnrolPatientForm = ({ theme, styles, onCancel, onEnrollSuccess }) => {
 
         <div style={{ marginBottom: '16px' }}>
           <label style={styles.formLabel}>Referring clinician (optional)</label>
-          <input 
-            style={styles.formInput} 
-            type="text" 
-            placeholder="e.g. Dr. Sarah Chen" 
+          <input
+            style={styles.formInput}
+            type="text"
+            placeholder="e.g. Dr. Sarah Chen"
             value={formData.referringClinician}
             onChange={(e) => handleChange(e, 'referringClinician')}
             disabled={submitting}
@@ -139,10 +142,10 @@ const EnrolPatientForm = ({ theme, styles, onCancel, onEnrollSuccess }) => {
 
         <div style={{ marginBottom: '16px' }}>
           <label style={styles.formLabel}>Treating clinician email (for pre-appointment summaries)</label>
-          <input 
-            style={styles.formInput} 
-            type="email" 
-            placeholder="clinician@practice.com" 
+          <input
+            style={styles.formInput}
+            type="email"
+            placeholder="clinician@practice.com"
             value={formData.treatingClinicianEmail}
             onChange={(e) => handleChange(e, 'treatingClinicianEmail')}
             disabled={submitting}
@@ -154,16 +157,16 @@ const EnrolPatientForm = ({ theme, styles, onCancel, onEnrollSuccess }) => {
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             style={{ ...styles.primaryBtn, opacity: submitting ? 0.7 : 1 }}
             disabled={submitting}
           >
             {submitting ? "Sending..." : "Send Invitation →"}
           </button>
-          <button 
-            type="button" 
-            style={styles.ghostBtn} 
+          <button
+            type="button"
+            style={styles.ghostBtn}
             onClick={onCancel}
             disabled={submitting}
           >
