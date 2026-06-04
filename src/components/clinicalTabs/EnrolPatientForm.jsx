@@ -34,7 +34,7 @@ const EnrolPatientForm = ({ theme, styles, onCancel, onEnrollSuccess }) => {
     
     try {
       setSubmitting(true);
-      const apiBaseUrl = getBaseURL();
+      const apiBaseUrl = getBaseURL()
 
       // 🚀 Dispatching network event payload straight to your configured express cluster instance
       const response = await fetch(`${apiBaseUrl}/api/patient/enroll`, {
@@ -126,7 +126,7 @@ const EnrolPatientForm = ({ theme, styles, onCancel, onEnrollSuccess }) => {
         </div>
 
         <div style={{ marginBottom: '16px' }}>
-          <label style={styles.formLabel}>Referring clinician (optional)</label>
+          <label style={styles.formLabel}>Referring clinician</label>
           <input 
             style={styles.formInput} 
             type="text" 
