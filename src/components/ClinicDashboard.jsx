@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import ClinicalPatientDashboard from './ClinicalPatientDashboard';
 import EnrolPatientForm from './clinicalTabs/EnrolPatientForm';
+import PatientPanel from './PatientPanel';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
-
-
 
 // Initialize Supabase
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -261,11 +260,10 @@ const ClinicDashboard = () => {
     return { bg: theme.ivoryDark, text: theme.grey, label: status };
   };
 
-  // Inside ClinicDashboard.jsx component scope:
   const handleEnrollSubmit = async () => {
     // 1. Re-fetch table records from Supabase now that backend tables have updated
     await fetchSupabasePatientPanel();
-    
+
     // 2. Cleanly swap tabs back over to your dashboard panel tracker view
     setActiveTab('panel');
   };
@@ -338,9 +336,9 @@ const ClinicDashboard = () => {
           ) : (
             <>
               {activeTab === 'patientDetail' && selectedPatientId && (
-                <ClinicalPatientDashboard 
-                  patientId={selectedPatientId} 
-                  onBack={() => setActiveTab('panel')} 
+                <ClinicalPatientDashboard
+                  patientId={selectedPatientId}
+                  onBack={() => setActiveTab('panel')}
                 />
               )}
               {/* ================= EXECUTIVE TAB ================= */}
@@ -517,130 +515,23 @@ const ClinicDashboard = () => {
 
               {/* ================= PATIENT PANEL TAB ================= */}
               {activeTab === 'panel' && (
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-                    <div>
-                      <div style={styles.pageTitle}>Patient Panel</div>
-                      <div style={styles.pageSub}>{metrics.totalEnrolled} enrolled · {metrics.activeThisWeek} active · 0 pending · 0 inactive</div>
-                    </div>
-                    <button style={styles.primaryBtn} onClick={() => setActiveTab('enrol')}>＋ Enrol Patient</button>
-                  </div>
-
-                  {/* Filters */}
-                  <div style={{ display: 'flex', gap: '10px', marginBottom: '18px', flexWrap: 'wrap' }}>
-                    <select style={styles.formSelect} value={conditionFilter} onChange={(e) => setConditionFilter(e.target.value)}>
-                      <option value="All">All conditions</option>
-                      <option value="Thyroid Disease">Thyroid Disease</option>
-                      <option value="PCOS">PCOS</option>
-                      <option value="Endometriosis">Endometriosis</option>
-                    </select>
-
-                    <select style={styles.formSelect} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                      <option value="All">All statuses</option>
-                      <option value="Green">Green</option>
-                      <option value="Amber">Amber</option>
-                      <option value="Red">Red</option>
-                    </select>
-
-                    <input
-                      type="text"
-                      placeholder="Search patient…"
-                      style={{ ...styles.formInput, flex: 1, minWidth: '160px' }}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-
-                  {/* Patient Table with Actions */}
-                  <div style={{ ...styles.card, padding: 0, overflowX: 'auto' }}>
-                    <table style={styles.table}>
-                      <thead>
-                        <tr>
-                          <th style={styles.th}>Patient</th>
-                          <th style={styles.th}>Condition</th>
-                          <th style={styles.th}>Enrolled</th>
-                          <th style={styles.th}>Streak</th>
-                          <th style={styles.th}>Last Check-In</th>
-                          <th style={styles.th}>Status</th>
-                          <th style={styles.th}>Protocol</th>
-                          <th style={styles.th}>Next Appt</th>
-                          <th style={{ ...styles.th, textAlign: 'right' }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredPatients.map(patient => {
-                          const badge = getBadgeStyle(patient.risk);
-                          const apptBadge = getPreApptBadge(patient.preApptStatus);
-
-                          return (
-                            <tr key={patient.id} style={styles.trHover}>
-                              <td style={styles.td}>
-                                <div style={{ fontWeight: '600', color: theme.charcoal }}>{patient.id}</div>
-                                <div style={{ fontSize: '11px', color: theme.grey, marginTop: '1px' }}>{patient.name}</div>
-                              </td>
-                              <td style={styles.td}>
-                                <div style={{ fontSize: '13px' }}>{patient.condition}</div>
-                                <div style={{ fontSize: '11px', color: theme.grey }}>Thyroid Disease</div>
-                              </td>
-                              <td style={styles.td}>
-                                <div style={{ fontSize: '12px', color: theme.grey }}>{patient.enrollDate}</div>
-                              </td>
-                              <td style={styles.td}>
-                                <span style={styles.streakPill}>🔥 {patient.streak}</span>
-                              </td>
-                              <td style={styles.td}>
-                                <div style={{ fontSize: '13px' }}>{patient.lastCheckin}</div>
-                                {patient.streakDays > 0 && <div style={{ fontSize: '11px', color: theme.green }}>✓ Submitted</div>}
-                              </td>
-                              <td style={styles.td}>
-                                <span style={{ ...styles.badge, backgroundColor: badge.bg, color: badge.text }}>
-                                  {badge.label}
-                                </span>
-                              </td>
-                              <td style={styles.td}>
-                                <span style={{ fontSize: '12px', color: theme.grey }}>—</span>
-                              </td>
-                              <td style={styles.td}>
-                                <span style={{ ...styles.badge, backgroundColor: apptBadge.bg, color: apptBadge.text }}>
-                                  {apptBadge.label}
-                                </span>
-                              </td>
-                              <td style={{ ...styles.td, textAlign: 'right' }}>
-                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                                  <button
-                                    onClick={() => handleViewPatient(patient.id)}
-                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: theme.tealLight, color: theme.teal, border: 'none', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
-                                  >
-                                    📊 Dashboard
-                                  </button>
-                                  <button
-                                    onClick={() => navigate(`/clinical-summary/${patient.id}`)}
-                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: theme.teal, color: theme.ivory, border: 'none', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
-                                  >
-                                    📄 Summary
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                    {filteredPatients.length === 0 && (
-                      <div style={{ padding: '40px', textAlign: 'center', color: theme.grey, fontSize: '13px' }}>
-                        No matching patients found in database.
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Promo Box */}
-                  <div style={{ marginTop: '14px', padding: '14px 16px', background: theme.tealLight, borderRadius: '10px', border: '1px dashed rgba(15,76,92,0.2)' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: theme.teal, marginBottom: '4px' }}>Ready to grow the panel?</div>
-                    <div style={{ fontSize: '13px', color: theme.grey }}>Enrol your next patient with a personalised magic link — takes 30 seconds.</div>
-                    <button style={{ ...styles.primaryBtn, marginTop: '10px', fontSize: '13px', padding: '8px 16px' }} onClick={() => setActiveTab('enrol')}>Enrol Next Patient →</button>
-                  </div>
-
-                </div>
+                <PatientPanel
+                  metrics={metrics}
+                  conditionFilter={conditionFilter}
+                  setConditionFilter={setConditionFilter}
+                  statusFilter={statusFilter}
+                  setStatusFilter={setStatusFilter}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  filteredPatients={filteredPatients}
+                  getBadgeStyle={getBadgeStyle}
+                  getPreApptBadge={getPreApptBadge}
+                  handleViewPatient={handleViewPatient}
+                  navigate={navigate}
+                  setActiveTab={setActiveTab}
+                  styles={styles}
+                  theme={theme}
+                />
               )}
 
               {/* ================= ALERTS TAB ================= */}
@@ -678,13 +569,13 @@ const ClinicDashboard = () => {
 
               {/* ================= ENROL TAB ================= */}
               {activeTab === 'enrol' && (
-              <EnrolPatientForm 
-                theme={theme}
-                styles={styles}
-                onCancel={() => setActiveTab('panel')}
-                onEnrollSuccess={handleEnrollSubmit}
-              />
-            )}
+                <EnrolPatientForm
+                  theme={theme}
+                  styles={styles}
+                  onCancel={() => setActiveTab('panel')}
+                  onEnrollSuccess={handleEnrollSubmit}
+                />
+              )}
             </>
           )}
         </main>
@@ -765,8 +656,19 @@ const styles = {
   td: { padding: '14px 14px', fontSize: '13px', borderBottom: `1px solid ${theme.ivory}`, color: theme.charcoal, verticalAlign: 'middle' },
   trHover: { borderBottom: '1px solid rgba(15,76,92,0.04)', transition: 'background-color 0.15s ease' },
 
-  streakPill: { display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 10px', background: theme.ivoryDark, borderRadius: '20px', fontSize: '12px', fontWeight: 600, color: theme.charcoal },
-  badge: { display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.04em' },
+  streakPill: { display: 'inline-flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', // Centers contents horizontally inside the pill
+    flexDirection: 'row',     // 🚀 Forces the emoji and number side-by-side
+    whiteSpace: 'nowrap',     // 🚀 Prevents the text from breaking downward
+    gap: '4px', 
+    padding: '4px 10px', 
+    background: 'var(--ivory-dark)', 
+    borderRadius: '20px', 
+    fontSize: '12px', 
+    fontWeight: 600, 
+     background: theme.ivoryDark,
+    color: 'var(--charcoal)'},
 
   alertItem: { display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '14px 0', borderBottom: `1px solid ${theme.ivoryDark}` },
   alertIcon: { width: '36px', height: '36px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 },

@@ -4,8 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // Import your clinical components
 import ClinicalLoginPage from './components/ClinicalLoginPage';
 import ClinicDashboard from './components/ClinicDashboard';
-import ClinicalPatientDashboard from './components/ClinicalPatientDashboard'; // NEW: Imported patient dashboard
-
+import ClinicalPatientDashboard from './components/ClinicalPatientDashboard'; 
 /**
  * Protected Route Wrapper
  * Checks for the auth token set by ClinicalLoginPage. 
