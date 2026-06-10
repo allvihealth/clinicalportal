@@ -46,6 +46,7 @@ const PatientPanel = ({
                     setLiveMetrics({
                         totalEnrolled: res.data.metrics?.totalEnrolled || res.data.patients?.length || 0,
                         activeThisWeek: res.data.metrics?.activeThisWeek || 0
+
                     });
                 }
             } catch (err) {
@@ -115,6 +116,8 @@ const PatientPanel = ({
                     <option value="Thyroid Disease">Thyroid Disease</option>
                     <option value="PCOS">PCOS</option>
                     <option value="Endometriosis">Endometriosis</option>
+                     <option value="Perimenopause">Perimenopause</option>
+                      <option value="Menopause">Menopause</option>
                 </select>
 
                 <select style={styles.formSelect} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
@@ -162,7 +165,7 @@ const PatientPanel = ({
                                     </td>
                                     <td style={styles.td}>
                                         <div style={{ fontSize: '13px' }}>{patient.condition}</div>
-                                        <div style={{ fontSize: '11px', color: theme.grey }}>Chronic Vector</div>
+                                        <div style={{ fontSize: '11px', color: theme.grey }}>{patient.organisation}</div>
                                     </td>
                                     <td style={styles.td}>
                                         <div style={{ fontSize: '12px', color: theme.grey }}>{patient.enrollDate || '—'}</div>
