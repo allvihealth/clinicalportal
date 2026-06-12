@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ClinicalPatientDashboard from './ClinicalPatientDashboard';
 import EnrolPatientForm from './clinicalTabs/EnrolPatientForm';
+import SymptomImprovementCard from './clinicalTabs/SymptomImprovementCard';
 import PatientPanel from './PatientPanel';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Menu, X } from 'lucide-react'; // Added Menu and X for the dynamic drawer panel toggle
@@ -42,6 +43,9 @@ const ClinicDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [conditionFilter, setConditionFilter] = useState('All');
+  const [orgName, setOrgName] = useState('NA');
+  const [orgRole, setOrgRole] = useState('NA');
+  const [symptoms, setSymptoms] = useState([]);
 
   // Executive Metrics State
   const [metrics, setMetrics] = useState({
@@ -77,7 +81,17 @@ const ClinicDashboard = () => {
       if (!mobileStatus) setMobileMenuOpen(false); // Clean up open menus if resizing back up to wide monitors
     };
     window.addEventListener('resize', handleResize);
-    fetchClinicalPortalData(); 
+    const cachedUser = localStorage.getItem('allvi_user_info');
+    if (cachedUser) {
+      const parsedUser = JSON.parse(cachedUser);
+      if (parsedUser.orgName) setOrgName(parsedUser.orgName);
+      if (parsedUser.orgRole) {
+        // Formats 'org_admin' or 'programme_manager' cleanly into plain words
+        const formattedRole = parsedUser.orgRole.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        setOrgRole(formattedRole);
+      }
+    }
+    fetchClinicalPortalData();
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -98,6 +112,7 @@ const ClinicDashboard = () => {
       if (res.data?.success) {
         const backendPatients = res.data.patients || [];
         setPatients(backendPatients);
+        setSymptoms(res.data.symptomImprovement || []);
         const total = backendPatients.length;
         const ambersAndReds = backendPatients.filter(p => p.risk === 'Amber' || p.risk === 'Red').length;
         const activeCount = res.data.metrics?.activeThisWeek || backendPatients.filter(p => parseInt(p.streak) > 0).length;
@@ -172,7 +187,7 @@ const ClinicDashboard = () => {
   };
 
   const handleEnrollSubmit = async () => {
-    await fetchClinicalPortalData(); 
+    await fetchClinicalPortalData();
     setActiveTab('panel');
   };
 
@@ -220,7 +235,7 @@ const ClinicDashboard = () => {
         <div style={styles.topbarLeft}>
           {/* 🚀 Mobile Trigger Drawer Button Control Module */}
           {isMobile && (
-            <button 
+            <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               style={{ background: 'none', border: 'none', color: theme.ivory, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px', marginRight: '4px' }}
             >
@@ -230,10 +245,10 @@ const ClinicDashboard = () => {
           <div style={styles.topbarLogo}>
             Allvi <span style={styles.topbarLogoSpan}>Organisation Dashboard</span>
           </div>
-          {!isMobile && <div style={styles.topbarOrg}>🏥 Greenfield Endocrinology{patients.organisation}</div>}
+          {!isMobile && <div style={styles.topbarOrg}>🏥 {orgName}</div>}
         </div>
         <div style={styles.topbarRight}>
-          {!isMobile && <span style={styles.topbarRole}>Programme Manager</span>}
+          {!isMobile && <span style={styles.topbarRole}>{orgRole}</span>}
           <div style={styles.topbarAvatar} onClick={handleLogout} title="Log Out">SC</div>
         </div>
       </div>
@@ -251,7 +266,7 @@ const ClinicDashboard = () => {
         {/* 🚀 MOBILE SLIDING DRAWER OVERLAY TRACK */}
         {isMobile && mobileMenuOpen && (
           <>
-            <div 
+            <div
               onClick={() => setMobileMenuOpen(false)}
               style={{ position: 'fixed', top: '64px', left: 0, width: '100vw', height: 'calc(100vh - 64px)', background: 'rgba(31,41,55,0.4)', zIndex: 998, animation: 'fadeIn 0.2s ease' }}
             />
@@ -394,52 +409,18 @@ const ClinicDashboard = () => {
                       </div>
                     </div>
 
-                    <div style={styles.card} className="responsive-table-card">
-                      <div style={styles.cardTitle}>Symptom Improvement</div>
-                      <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '280px' }}>
-                          <thead>
-                            <tr>
-                              <th style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: theme.grey, padding: '6px 4px', textAlign: 'left', borderBottom: `1px solid ${theme.ivoryDark}` }}>Symptom</th>
-                              <th style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: theme.grey, padding: '6px 4px', textAlign: 'center', borderBottom: `1px solid ${theme.ivoryDark}` }}>Base</th>
-                              <th style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: theme.grey, padding: '6px 4px', textAlign: 'center', borderBottom: `1px solid ${theme.ivoryDark}` }}>Now</th>
-                              <th style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: theme.grey, padding: '6px 4px', textAlign: 'center', borderBottom: `1px solid ${theme.ivoryDark}` }}>Change</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td style={{ padding: '9px 4px', fontSize: '12px', borderBottom: `1px solid ${theme.ivory}` }}>Hair loss</td>
-                              <td style={{ textAlign: 'center', fontSize: '12px', borderBottom: `1px solid ${theme.ivory}` }}>100%</td>
-                              <td style={{ textAlign: 'center', fontSize: '12px', borderBottom: `1px solid ${theme.ivory}` }}>0%</td>
-                              <td style={{ textAlign: 'center', borderBottom: `1px solid ${theme.ivory}` }}><span style={{ fontSize: '11px', fontWeight: 700, color: theme.green }}>↓ 100pp</span></td>
-                            </tr>
-                            <tr>
-                              <td style={{ padding: '9px 4px', fontSize: '12px', borderBottom: `1px solid ${theme.ivory}`, background: theme.ivory }}>Brain fog</td>
-                              <td style={{ textAlign: 'center', fontSize: '12px', borderBottom: `1px solid ${theme.ivory}`, background: theme.ivory }}>61%</td>
-                              <td style={{ textAlign: 'center', fontSize: '12px', borderBottom: `1px solid ${theme.ivory}`, background: theme.ivory }}>0%</td>
-                              <td style={{ textAlign: 'center', borderBottom: `1px solid ${theme.ivory}`, background: theme.ivory }}><span style={{ fontSize: '11px', fontWeight: 700, color: theme.green }}>↓ 61pp</span></td>
-                            </tr>
-                            <tr>
-                              <td style={{ padding: '9px 4px', fontSize: '12px', borderBottom: `1px solid ${theme.ivory}` }}>Constipation</td>
-                              <td style={{ textAlign: 'center', fontSize: '12px', borderBottom: `1px solid ${theme.ivory}` }}>72%</td>
-                              <td style={{ textAlign: 'center', fontSize: '12px', borderBottom: `1px solid ${theme.ivory}` }}>21%*</td>
-                              <td style={{ textAlign: 'center', borderBottom: `1px solid ${theme.ivory}` }}><span style={{ fontSize: '11px', fontWeight: 700, color: theme.amber }}>↓ 51pp</span></td>
-                            </tr>
-                            <tr>
-                              <td style={{ padding: '9px 4px', fontSize: '12px', borderBottom: `1px solid ${theme.ivory}`, background: theme.ivory }}>Joint pain</td>
-                              <td style={{ textAlign: 'center', fontSize: '12px', borderBottom: `1px solid ${theme.ivory}`, background: theme.ivory }}>83%</td>
-                              <td style={{ textAlign: 'center', fontSize: '12px', borderBottom: `1px solid ${theme.ivory}`, background: theme.ivory }}>0%</td>
-                              <td style={{ textAlign: 'center', borderBottom: `1px solid ${theme.ivory}`, background: theme.ivory }}><span style={{ fontSize: '11px', fontWeight: 700, color: theme.green }}>↓ 83pp</span></td>
-                            </tr>
-                            <tr>
-                              <td style={{ padding: '9px 4px', fontSize: '12px' }}>Fatigue</td>
-                              <td style={{ textAlign: 'center', fontSize: '12px' }}>67%</td>
-                              <td style={{ textAlign: 'center', fontSize: '12px' }}>43%</td>
-                              <td style={{ textAlign: 'center' }}><span style={{ fontSize: '11px', fontWeight: 700, color: theme.amber }}>↓ 24pp</span></td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
+                    <div style={{ ...styles.grid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr' }}>
+
+                      {/* Your revenue card element or alternative modules... 
+                      <div style={styles.card}>...</div>*/}
+
+                      {/* 🚀 YOUR CLEAN INDEPENDENT SYMPTOM CARD COMPONENT */}
+                      <SymptomImprovementCard
+                        symptoms={symptoms}
+                        theme={theme}
+                        styles={styles}
+                      />
+
                     </div>
                   </div>
                 </div>
@@ -588,17 +569,17 @@ const styles = {
   td: { padding: '14px 14px', fontSize: '13px', borderBottom: `1px solid ${theme.ivory}`, color: theme.charcoal, verticalAlign: 'middle' },
   trHover: { borderBottom: '1px solid rgba(15,76,92,0.04)', transition: 'background-color 0.15s ease' },
 
-  streakPill: { 
-    display: 'inline-flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    flexDirection: 'row', 
-    whiteSpace: 'nowrap', 
-    gap: '4px', 
-    padding: '4px 10px', 
-    borderRadius: '20px', 
-    fontSize: '12px', 
-    fontWeight: 600, 
+  streakPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    whiteSpace: 'nowrap',
+    gap: '4px',
+    padding: '4px 10px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: 600,
     background: theme.ivoryDark,
     color: 'var(--charcoal)'
   },

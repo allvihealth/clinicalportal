@@ -3,31 +3,65 @@ import { useNavigate } from 'react-router-dom';
 
 const ClinicalLoginPage = () => {
   const navigate = useNavigate();
-  
+
   // State for form inputs
-  const [email, setEmail] = useState('sarah.chen@greenfieldendo.com');
-  const [password, setPassword] = useState('••••••••••');
+  const [email, setEmail] = useState('dr.smith@allvi.com');
+  const [password, setPassword] = useState('12345678');
   const [isHovered, setIsHovered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
 
   // Handle the form submission
+  // ... existing state definitions ...
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage('');
 
     try {
-      // TODO: Replace this timeout with your actual backend authentication API call
-      // Example: const response = await api.post('/login', { email, password });
-      await new Promise(resolve => setTimeout(resolve, 800)); 
-      
-      // Set session token (matching your App.jsx logic)
-      localStorage.setItem('allvi_clinic_token', 'authenticated');
-      
-      // Route to dashboard on success
+      // 🌐 Dynamic Environment URL Routing
+      const baseURL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://127.0.0.1:5000'
+        : import.meta.env.VITE_SERVER_URL || '';
+
+      // Clean concatenation pointing straight to your new backend route mapping
+      const response = await fetch(`${baseURL}/api/clinical/clinical-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || 'Authentication engine rejected your credentials.');
+      }
+      console.log(data)
+
+      // Save tokens and navigate
+      localStorage.setItem('allvi_clinic_token', data.session.access_token);
+      localStorage.setItem('allvi_clinic_refresh_token', data.session.refresh_token);
+      localStorage.setItem('allvi_user_info', JSON.stringify(data.user));
+      const userInfo = {
+      id: data.user.id,
+      email: data.user.email,
+      full_name: data.user.full_name,
+      orgId: data.user.orgId,
+      orgRole: data.user.orgRole,  // e.g., 'clinician', 'programme_manager'
+      orgName: data.user.orgName   // This is what displays in your Topbar!
+    };
+    
+    // 3. Save the object into localStorage as a string stringified array
+    localStorage.setItem('allvi_user_info', JSON.stringify(userInfo));
+
       navigate('/clinic-dashboard');
     } catch (error) {
-      console.error("Login failed", error);
-      // Handle error state here (e.g., show error message)
+      console.error("❌ Front-end Login Handler Intercept:", error.message);
+      setErrorMessage(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -238,7 +272,7 @@ const ClinicalLoginPage = () => {
           fontSize: '12px',
           color: '#6B7280' // --grey
         }}>
-          🔒 HIPAA-compliant · 256-bit encrypted · SOC 2
+          🔒 GDPR-compliant · 🔒 HIPAA-compliant · 256-bit encrypted · SOC 2
         </div>
       </div>
     </div>
